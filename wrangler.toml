@@ -1,0 +1,14 @@
+name = "m5launcher-db"
+main = "./worker/index.js"
+compatibility_date = "2024-09-23"
+
+[assets]
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "APPS_KV"
+id = "a10e709cd3f04316b2d172a604acc2a1"
+remote = true
+
+[triggers]
+crons = ["0 0 * * *"]

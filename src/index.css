@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  logs: false;
+  themes: launcher;
+}
+
+/*
+Colors sourced from bmorcelli/Launcher webUi/style.css
+   #202124 body bg, #303134 containers, #00dd00 green accent, #e0d204 yellow secondary
+
+Make your own at https://daisyui.com/theme-generator
+*/
+@plugin "daisyui/theme" {
+  name: "launcher";
+  default: true;
+  prefersdark: true;
+  color-scheme: "dark";
+
+  --color-base-100: oklch(14% 0.005 264);
+  --color-base-200: oklch(21% 0.005 264);
+  --color-base-300: oklch(26% 0.005 264);
+  --color-base-content: oklch(90% 0.05 142);
+
+  --color-primary: oklch(74% 0.29 142);
+  --color-primary-content: oklch(10% 0.03 142);
+
+  --color-secondary: oklch(84% 0.19 97);
+  --color-secondary-content: oklch(10% 0.03 97);
+
+  --color-accent: oklch(74% 0.29 142);
+  --color-accent-content: oklch(10% 0.03 142);
+
+  --color-neutral: oklch(21% 0.005 264);
+  --color-neutral-content: oklch(90% 0.05 142);
+
+  --color-info: oklch(65% 0.15 220);
+  --color-info-content: oklch(95% 0.01 220);
+  --color-success: oklch(74% 0.29 142);
+  --color-success-content: oklch(10% 0.03 142);
+  --color-warning: oklch(84% 0.19 97);
+  --color-warning-content: oklch(10% 0.03 97);
+  --color-error: oklch(65% 0.18 22);
+  --color-error-content: oklch(95% 0.01 22);
+
+  --radius-selector: 1rem;
+  --radius-field: 1.5rem;
+  --radius-box: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
