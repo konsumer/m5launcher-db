@@ -1,5 +1,6 @@
 This is a simple community-database for ESP32 firmwares (for use in [Launcher](https://bmorcelli.github.io/Launcher/).)
 
+This provides an API and frontend. Operations that mutate require Github auth.
 
 ## Setup
 
