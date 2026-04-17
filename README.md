@@ -1,12 +1,15 @@
-# Setup
+This is a simple community-database for ESP32 firmwares (for use in [Launcher](https://bmorcelli.github.io/Launcher/).)
 
-## 1. Install dependencies
+
+## Setup
+
+### 1. Install dependencies
 
 ```sh
 npm install
 ```
 
-## 2. Create KV namespace
+### 2. Create KV namespace
 
 ```sh
 npx -y wrangler kv namespace create APPS_KV
@@ -21,7 +24,7 @@ Copy the IDs into `wrangler.toml` to replace the placeholder values.
 3. Set **Authorization callback URL** to `https://m5launcher-db.konsumer.workers.dev/api/auth/callback`
 4. Copy the **Client ID** and generate a **Client Secret**
 
-## 4. Set secrets
+### 4. Set secrets
 
 ```sh
 npx -y wrangler secret put GITHUB_CLIENT_ID
@@ -35,7 +38,7 @@ GITHUB_CLIENT_ID=your_client_id
 GITHUB_CLIENT_SECRET=your_client_secret
 ```
 
-## 5. Local development
+### 5. Local development
 
 ```sh
 npm start
@@ -46,7 +49,7 @@ to `http://localhost:5173/api/auth/callback` — make sure your GitHub OAuth app
 `http://localhost:5173/api/auth/callback` added as an additional callback URL (or create
 a separate dev OAuth app).
 
-## 6. Deploy
+### 6. Deploy
 
 ```sh
 npm run deploy
