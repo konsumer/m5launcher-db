@@ -4,9 +4,25 @@ export async function handleApps(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
 
   if (request.method === 'GET') {
-    const list = await env.APPS_KV.list({ prefix: 'app:' })
-    const apps = await Promise.all(list.keys.map((k) => env.APPS_KV.get(k.name, 'json')))
-    return json(apps.filter(Boolean))
+    // Community apps + M5Burner cache in parallel (2 KV reads regardless of count)
+    const [kvList, burnerCache] = await Promise.all([
+      env.APPS_KV.list({ prefix: 'app:' }),
+      env.APPS_KV.get('burner:cache', 'json'),
+    ])
+    const community = (await Promise.all(kvList.keys.map((k) => env.APPS_KV.get(k.name, 'json'))))
+      .filter(Boolean)
+      .map((a) => ({ ...a, source: 'community' }))
+
+    // Dedup: community wins over burner by fid, then by normalized name+author
+    const norm = (s) => (s ?? '').toLowerCase().trim()
+    const communityFids = new Set(community.map((a) => a.fid).filter(Boolean))
+    const communityKeys = new Set(community.map((a) => `${norm(a.name)}|${norm(a.author)}`))
+
+    const burner = (burnerCache ?? []).filter(
+      (a) => !communityFids.has(a.fid) && !communityKeys.has(`${norm(a.name)}|${norm(a.author)}`)
+    )
+
+    return json([...community, ...burner])
   }
 
   if (request.method === 'POST') {
@@ -30,6 +46,7 @@ export async function handleApps(request, env) {
       github: body.github.trim(),
       description: body.description.trim(),
       cover: body.cover.trim(),
+      category: body.category ?? null,
       versions: Array.isArray(body.versions) ? body.versions : [],
     }
     await env.APPS_KV.put(`app:${slug}`, JSON.stringify(app))
@@ -65,6 +82,7 @@ export async function handleApp(request, env, name) {
       github: body.github?.trim() ?? existing.github,
       description: body.description?.trim() ?? existing.description,
       cover: body.cover?.trim() ?? existing.cover,
+      category: 'category' in body ? (body.category ?? null) : existing.category ?? null,
       versions: Array.isArray(body.versions) ? body.versions : existing.versions,
     }
     await env.APPS_KV.put(key, JSON.stringify(updated))

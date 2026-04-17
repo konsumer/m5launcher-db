@@ -1,5 +1,6 @@
 import { handleApps, handleApp } from './routes/apps.js'
 import { handleLogin, handleCallback, handleUser, handleLogout } from './routes/auth.js'
+import { syncBurner } from './jobs/sync-burner.js'
 
 export default {
   async fetch(request, env) {
@@ -16,19 +17,8 @@ export default {
   },
 
   async scheduled(event, env) {
-    switch (event.cron) {
-      case '0 0 * * *':
-        await dailyCleanup(env)
-        break
+    if (event.cron === '0 */2 * * *') {
+      await syncBurner(env.APPS_KV)
     }
   },
-}
-
-async function dailyCleanup(env) {
-  // Example: scan for anything you want to prune.
-  // KV session keys already expire via their TTL, so there's nothing
-  // to clean there. Add your own logic here as needed, e.g.:
-  //   - mirror release metadata from GitHub
-  //   - prune apps whose GitHub repos no longer exist
-  console.log('daily cleanup ran at', new Date().toISOString())
 }

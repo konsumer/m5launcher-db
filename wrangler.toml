@@ -11,4 +11,4 @@ id = "a10e709cd3f04316b2d172a604acc2a1"
 remote = true
 
 [triggers]
-crons = ["0 0 * * *"]
+crons = ["0 */2 * * *"]

@@ -8,7 +8,8 @@
     "start": "npm run dev",
     "build": "vite build",
     "deploy": "wrangler deploy",
-    "predeploy": "npm run build"
+    "predeploy": "npm run build",
+    "sync": "node tools/sync-burner.js"
   },
   "dependencies": {
     "react": "^18.3.1",

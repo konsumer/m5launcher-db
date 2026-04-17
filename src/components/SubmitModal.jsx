@@ -1,19 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { createApp } from '../api'
+import { createApp, updateApp } from '../api'
+import { CATEGORIES } from '../categories'
 
 const emptyVersion = () => ({ version: '', published_at: new Date().toISOString().slice(0, 10), file: '' })
 
-export function SubmitModal({ open, token, onClose, onCreated }) {
+// Pass `app` to edit an existing app, omit it to create a new one.
+export function SubmitModal({ open, token, onClose, onCreated, onUpdated, app: editApp }) {
+  const editing = !!editApp
+
   const [name, setName] = useState('')
   const [github, setGithub] = useState('')
   const [description, setDescription] = useState('')
   const [cover, setCover] = useState('')
+  const [category, setCategory] = useState('')
   const [versions, setVersions] = useState([emptyVersion()])
   const [saving, setSaving] = useState(false)
 
+  // Populate fields when switching into edit mode
+  useEffect(() => {
+    if (editApp) {
+      setName(editApp.name ?? '')
+      setGithub(editApp.github ?? '')
+      setDescription(editApp.description ?? '')
+      setCover(editApp.cover ?? '')
+      setCategory(editApp.category ?? '')
+      setVersions(editApp.versions?.length ? editApp.versions : [emptyVersion()])
+    }
+  }, [editApp])
+
   function reset() {
-    setName(''); setGithub(''); setDescription(''); setCover(''); setVersions([emptyVersion()])
+    setName(''); setGithub(''); setDescription(''); setCover(''); setCategory(''); setVersions([emptyVersion()])
   }
 
   function handleClose() { reset(); onClose() }
@@ -25,16 +42,27 @@ export function SubmitModal({ open, token, onClose, onCreated }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
+    const payload = {
+      name,
+      github,
+      description,
+      cover,
+      category: category || null,
+      versions: versions.filter((v) => v.version && v.file),
+    }
     try {
-      const app = await createApp(
-        { name, github, description, cover, versions: versions.filter((v) => v.version && v.file) },
-        token
-      )
-      toast.success(`"${app.name}" submitted!`)
-      onCreated(app)
+      if (editing) {
+        const updated = await updateApp(editApp.name, payload, token)
+        toast.success(`"${updated.name}" updated!`)
+        onUpdated?.(updated)
+      } else {
+        const created = await createApp(payload, token)
+        toast.success(`"${created.name}" submitted!`)
+        onCreated?.(created)
+      }
       handleClose()
     } catch (err) {
-      toast.error(err.message ?? 'Failed to submit')
+      toast.error(err.message ?? 'Something went wrong')
     } finally {
       setSaving(false)
     }
@@ -45,7 +73,7 @@ export function SubmitModal({ open, token, onClose, onCreated }) {
   return (
     <dialog className="modal modal-open" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="modal-box max-w-lg w-full">
-        <h3 className="font-bold text-lg mb-4">Submit an App</h3>
+        <h3 className="font-bold text-lg mb-4">{editing ? `Edit "${editApp.name}"` : 'Submit an App'}</h3>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label className="form-control">
             <div className="label"><span className="label-text">App Name *</span></div>
@@ -65,6 +93,14 @@ export function SubmitModal({ open, token, onClose, onCreated }) {
           <label className="form-control">
             <div className="label"><span className="label-text">Cover Image URL *</span></div>
             <input className="input input-bordered" required type="url" value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://github.com/you/app/raw/main/cover.png" />
+          </label>
+
+          <label className="form-control">
+            <div className="label"><span className="label-text">Device Category</span></div>
+            <select className="select select-bordered" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">— select a category —</option>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
           </label>
 
           <div>
@@ -98,7 +134,7 @@ export function SubmitModal({ open, token, onClose, onCreated }) {
           <div className="modal-action mt-2">
             <button type="button" className="btn btn-ghost" onClick={handleClose}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? <span className="loading loading-spinner loading-sm" /> : 'Submit'}
+              {saving ? <span className="loading loading-spinner loading-sm" /> : editing ? 'Save changes' : 'Submit'}
             </button>
           </div>
         </form>
