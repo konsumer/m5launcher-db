@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getUser, logout as apiLogout } from './api'
+import { getUser } from './api'
 
-const SESSION_KEY = 'm5launcher_session'
+const TOKEN_KEY = 'm5launcher_token'
 
 export function useAuth() {
-  const [token, setToken] = useState(() => localStorage.getItem(SESSION_KEY))
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY))
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const sessionFromUrl = params.get('session')
-    if (sessionFromUrl) {
-      localStorage.setItem(SESSION_KEY, sessionFromUrl)
-      setToken(sessionFromUrl)
-      params.delete('session')
+    const tokenFromUrl = params.get('token')
+    if (tokenFromUrl) {
+      localStorage.setItem(TOKEN_KEY, tokenFromUrl)
+      setToken(tokenFromUrl)
+      params.delete('token')
       params.delete('auth_error')
       const clean = params.toString() ? `?${params}` : window.location.pathname
       window.history.replaceState({}, '', clean)
@@ -27,7 +27,7 @@ export function useAuth() {
     getUser(token)
       .then(setUser)
       .catch(() => {
-        localStorage.removeItem(SESSION_KEY)
+        localStorage.removeItem(TOKEN_KEY)
         setToken(null)
       })
       .finally(() => setLoading(false))
@@ -35,12 +35,11 @@ export function useAuth() {
 
   const login = useCallback(() => { window.location.href = '/api/auth/login' }, [])
 
-  const logout = useCallback(async () => {
-    if (token) await apiLogout(token).catch(() => {})
-    localStorage.removeItem(SESSION_KEY)
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY)
     setToken(null)
     setUser(null)
-  }, [token])
+  }, [])
 
   return { token, user, loading, login, logout }
 }

@@ -1,10 +1,4 @@
-import { json, err, getSession, CORS_HEADERS } from '../helpers.js'
-
-function randomId(len = 40) {
-  const bytes = new Uint8Array(len)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
-}
+import { json, err, getGitHubUser, CORS_HEADERS } from '../helpers.js'
 
 export function handleLogin(request, env) {
   if (!env.GITHUB_CLIENT_ID) return err('GitHub OAuth not configured', 500)
@@ -29,31 +23,17 @@ export async function handleCallback(request, env) {
   const tokenData = await tokenRes.json()
   if (!tokenData.access_token) return Response.redirect(`${origin}/?auth_error=token_exchange_failed`, 302)
 
-  const userRes = await fetch('https://api.github.com/user', {
-    headers: { Authorization: `Bearer ${tokenData.access_token}`, 'User-Agent': 'm5launcher-db' },
-  })
-  const gh = await userRes.json()
-
-  const sessionId = randomId()
-  await env.APPS_KV.put(
-    `session:${sessionId}`,
-    JSON.stringify({ github_token: tokenData.access_token, login: gh.login, name: gh.name ?? null, avatar_url: gh.avatar_url }),
-    { expirationTtl: 86400 }
-  )
-  return Response.redirect(`${origin}/?session=${sessionId}`, 302)
+  return Response.redirect(`${origin}/?token=${tokenData.access_token}`, 302)
 }
 
-export async function handleUser(request, env) {
+export async function handleUser(request) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
-  const session = await getSession(request, env)
-  if (!session) return err('Unauthorized', 401)
-  return json({ login: session.login, name: session.name, avatar_url: session.avatar_url })
+  const user = await getGitHubUser(request)
+  if (!user) return err('Unauthorized', 401)
+  return json({ login: user.login, name: user.name ?? null, avatar_url: user.avatar_url })
 }
 
-export async function handleLogout(request, env) {
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
-  const auth = request.headers.get('Authorization') ?? ''
-  const token = auth.replace(/^Bearer\s+/i, '').trim()
-  if (token) await env.APPS_KV.delete(`session:${token}`)
+export function handleLogout() {
+  // Token lives only in the client — nothing to invalidate server-side
   return json({ ok: true })
 }

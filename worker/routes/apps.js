@@ -1,4 +1,4 @@
-import { json, err, getSession, slugify, CORS_HEADERS } from '../helpers.js'
+import { json, err, getGitHubUser, slugify, CORS_HEADERS } from '../helpers.js'
 
 export async function handleApps(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
@@ -26,7 +26,7 @@ export async function handleApps(request, env) {
   }
 
   if (request.method === 'POST') {
-    const session = await getSession(request, env)
+    const session = await getGitHubUser(request)
     if (!session) return err('Unauthorized', 401)
 
     let body
@@ -66,7 +66,7 @@ export async function handleApp(request, env, name) {
     return app ? json(app) : err('Not found', 404)
   }
 
-  const session = await getSession(request, env)
+  const session = await getGitHubUser(request)
   if (!session) return err('Unauthorized', 401)
 
   const existing = await env.APPS_KV.get(key, 'json')

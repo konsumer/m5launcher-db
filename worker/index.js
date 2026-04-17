@@ -10,8 +10,8 @@ export default {
     if (pathname.startsWith('/api/apps/')) return handleApp(request, env, decodeURIComponent(pathname.slice('/api/apps/'.length)))
     if (pathname === '/api/auth/login') return handleLogin(request, env)
     if (pathname === '/api/auth/callback') return handleCallback(request, env)
-    if (pathname === '/api/auth/user') return handleUser(request, env)
-    if (pathname === '/api/auth/logout') return handleLogout(request, env)
+    if (pathname === '/api/auth/user') return handleUser(request)
+    if (pathname === '/api/auth/logout') return handleLogout()
 
     return env.ASSETS.fetch(request)
   },

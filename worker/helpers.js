@@ -15,11 +15,15 @@ export function err(message, status = 400) {
   return json({ error: message }, status)
 }
 
-export async function getSession(request, env) {
+export async function getGitHubUser(request) {
   const auth = request.headers.get('Authorization') ?? ''
   const token = auth.replace(/^Bearer\s+/i, '').trim()
   if (!token) return null
-  return env.APPS_KV.get(`session:${token}`, 'json')
+  const res = await fetch('https://api.github.com/user', {
+    headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'm5launcher-db' },
+  })
+  if (!res.ok) return null
+  return res.json()
 }
 
 export function slugify(name) {
